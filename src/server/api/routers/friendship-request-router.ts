@@ -117,6 +117,42 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+
+        await t
+          .updateTable('friendships')
+          .set({
+            status: 'accepted',
+          })
+          .where('friendUserId', '=', ctx.session.userId)
+          .where('userId', '=', input.friendUserId)
+          .execute()
+
+        const fB = await t
+          .selectFrom('friendships')
+          .select('userId')
+          .where('friendUserId', '=', input.friendUserId)
+          .where('userId', '=', ctx.session.userId)
+          .execute()
+
+        if (fB.length > 0) {
+          await t
+            .updateTable('friendships')
+            .set({
+              status: 'accepted',
+            })
+            .where('userId', '=', ctx.session.userId)
+            .where('friendUserId', '=', input.friendUserId)
+            .execute()
+        } else {
+          await t
+            .insertInto('friendships')
+            .values({
+              status: 'accepted',
+              userId: ctx.session.userId,
+              friendUserId: input.friendUserId,
+            })
+            .execute()
+        }
       })
     }),
 
