@@ -79,6 +79,24 @@ export const friendshipRequestRouter = router({
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
+      const requestExist = await ctx.db
+        .selectFrom('friendships')
+        .select('status')
+        .where('userId', '=', ctx.session.userId)
+        .where('friendUserId', '=', input.friendUserId)
+        .executeTakeFirst()
+
+      if (requestExist && requestExist.status === 'declined') {
+        return ctx.db
+          .updateTable('friendships')
+          .set({
+            status: FriendshipStatusSchema.Values['requested'],
+          })
+          .where('userId', '=', ctx.session.userId)
+          .where('friendUserId', '=', input.friendUserId)
+          .execute()
+      }
+
       return ctx.db
         .insertInto('friendships')
         .values({
@@ -173,5 +191,14 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+
+      await ctx.db
+        .updateTable('friendships')
+        .set({
+          status: 'declined',
+        })
+        .where('friendUserId', '=', ctx.session.userId)
+        .where('userId', '=', input.friendUserId)
+        .execute()
     }),
 })
