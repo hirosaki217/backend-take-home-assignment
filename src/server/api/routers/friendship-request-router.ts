@@ -79,6 +79,7 @@ export const friendshipRequestRouter = router({
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
+
       const requestExist = await ctx.db
         .selectFrom('friendships')
         .select('status')
@@ -86,6 +87,7 @@ export const friendshipRequestRouter = router({
         .where('friendUserId', '=', input.friendUserId)
         .executeTakeFirst()
 
+      // check if the user is exist and friendships's status is declines the friendship request
       if (requestExist && requestExist.status === 'declined') {
         return ctx.db
           .updateTable('friendships')
@@ -135,39 +137,45 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+        const userId = ctx.session.userId
+        const friendId = input.friendUserId
 
+        // Update the friendship request to have status `accepted`
         await t
           .updateTable('friendships')
           .set({
             status: 'accepted',
           })
-          .where('friendUserId', '=', ctx.session.userId)
-          .where('userId', '=', input.friendUserId)
+          .where('friendUserId', '=', userId)
+          .where('userId', '=', friendId)
           .execute()
 
         const fB = await t
           .selectFrom('friendships')
           .select('userId')
-          .where('friendUserId', '=', input.friendUserId)
-          .where('userId', '=', ctx.session.userId)
+          .where('friendUserId', '=', friendId)
+          .where('userId', '=', userId)
           .execute()
 
+        // Check if the user is already existing another request
         if (fB.length > 0) {
+          // if existing request is only update it to 'accepted'
           await t
             .updateTable('friendships')
             .set({
               status: 'accepted',
             })
-            .where('userId', '=', ctx.session.userId)
-            .where('friendUserId', '=', input.friendUserId)
+            .where('userId', '=', userId)
+            .where('friendUserId', '=', friendId)
             .execute()
         } else {
+          // Create a new friendship request record with the opposite user as the friend
           await t
             .insertInto('friendships')
             .values({
               status: 'accepted',
-              userId: ctx.session.userId,
-              friendUserId: input.friendUserId,
+              userId: userId,
+              friendUserId: friendId,
             })
             .execute()
         }
