@@ -80,24 +80,24 @@ export const friendshipRequestRouter = router({
        *  - Run `yarn test` to verify your answer
        */
 
-      const requestExist = await ctx.db
-        .selectFrom('friendships')
-        .select('status')
-        .where('userId', '=', ctx.session.userId)
-        .where('friendUserId', '=', input.friendUserId)
-        .executeTakeFirst()
+      // const requestExist = await ctx.db
+      //   .selectFrom('friendships')
+      //   .select('status')
+      //   .where('userId', '=', ctx.session.userId)
+      //   .where('friendUserId', '=', input.friendUserId)
+      //   .executeTakeFirst()
 
-      // check if the user is exist and friendships's status is declines the friendship request
-      if (requestExist && requestExist.status === 'declined') {
-        return ctx.db
-          .updateTable('friendships')
-          .set({
-            status: FriendshipStatusSchema.Values['requested'],
-          })
-          .where('userId', '=', ctx.session.userId)
-          .where('friendUserId', '=', input.friendUserId)
-          .execute()
-      }
+      // // check if the user is exist and friendships's status is declines the friendship request
+      // if (requestExist && requestExist.status === 'declined') {
+      //   return ctx.db
+      //     .updateTable('friendships')
+      //     .set({
+      //       status: FriendshipStatusSchema.Values['requested'],
+      //     })
+      //     .where('userId', '=', ctx.session.userId)
+      //     .where('friendUserId', '=', input.friendUserId)
+      //     .execute()
+      // }
 
       return ctx.db
         .insertInto('friendships')
@@ -106,9 +106,15 @@ export const friendshipRequestRouter = router({
           friendUserId: input.friendUserId,
           status: FriendshipStatusSchema.Values['requested'],
         })
+        .onConflict((oc) =>
+          oc
+            .columns(['userId', 'friendUserId'])
+            .doUpdateSet({ status: FriendshipStatusSchema.Values['requested'] })
+        )
         .execute()
     }),
-
+  // INSERT INTO friendships('user_id', 'friend_user_id', 'status') values(session.userId, friendUserId, status)
+  // ON DUPLICATE KEY UPDATE 'status' = 'requested'
   accept: procedure
     .use(canAnswerFriendshipRequest)
     .input(AnswerFriendshipRequestInputSchema)
@@ -149,7 +155,7 @@ export const friendshipRequestRouter = router({
           .where('friendUserId', '=', userId)
           .where('userId', '=', friendId)
           .execute()
-
+        // update friendships SET status = 'accepted' WHERE friend_user_id = userId AND user_id = friendId
         const fB = await t
           .selectFrom('friendships')
           .select('userId')

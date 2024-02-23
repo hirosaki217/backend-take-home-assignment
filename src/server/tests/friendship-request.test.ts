@@ -290,4 +290,69 @@ describe.concurrent('Friendship request', async () => {
       })
     )
   })
+
+  test('Question 5 ', async ({ expect }) => {
+    const [userA, userB, userC, userD, userE] = await Promise.all([
+      createUser(),
+      createUser(),
+      createUser(),
+      createUser(),
+      createUser(),
+    ])
+
+    await Promise.all([
+      userB.sendFriendshipRequest({
+        friendUserId: userA.id,
+      }),
+      userC.sendFriendshipRequest({
+        friendUserId: userA.id,
+      }),
+      userD.sendFriendshipRequest({
+        friendUserId: userA.id,
+      }),
+      userE.sendFriendshipRequest({
+        friendUserId: userA.id,
+      }),
+      userC.sendFriendshipRequest({
+        friendUserId: userB.id,
+      }),
+    ])
+
+    await Promise.all([
+      userA.acceptFriendshipRequest({
+        friendUserId: userB.id,
+      }),
+      userA.acceptFriendshipRequest({
+        friendUserId: userC.id,
+      }),
+      userA.acceptFriendshipRequest({
+        friendUserId: userD.id,
+      }),
+      userA.acceptFriendshipRequest({
+        friendUserId: userE.id,
+      }),
+      userB.acceptFriendshipRequest({
+        friendUserId: userC.id,
+      }),
+    ])
+
+    await expect(userB.getAllFriends()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: userA.id,
+          fullName: userA.fullName,
+          phoneNumber: userA.phoneNumber,
+          totalFriendCount: 4,
+          mutualFriendCount: 1,
+        }),
+        expect.objectContaining({
+          id: userC.id,
+          fullName: userC.fullName,
+          phoneNumber: userC.phoneNumber,
+          totalFriendCount: 2,
+          mutualFriendCount: 1,
+        }),
+      ])
+    )
+  })
 })
