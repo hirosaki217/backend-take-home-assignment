@@ -116,7 +116,6 @@ export const myFriendRouter = router({
             ])
 
           return [
-            'friends.id',
             'friends.fullName',
             'friends.phoneNumber',
             'totalFriendCount',
