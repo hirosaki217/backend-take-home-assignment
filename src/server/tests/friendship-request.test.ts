@@ -291,7 +291,7 @@ describe.concurrent('Friendship request', async () => {
     )
   })
 
-  test('Question 5 ', async ({ expect }) => {
+  test('Question 5 / Scenario 1', async ({ expect }) => {
     const [userA, userB, userC, userD, userE] = await Promise.all([
       createUser(),
       createUser(),
@@ -336,22 +336,32 @@ describe.concurrent('Friendship request', async () => {
       }),
     ])
 
-    await expect(userB.getAllFriends()).resolves.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: userA.id,
-          fullName: userA.fullName,
-          phoneNumber: userA.phoneNumber,
-          totalFriendCount: 4,
+    await expect(userA.getAll()).resolves.toEqual(
+      expect.objectContaining([
+        {
+          fullName: userB.fullName,
+          phoneNumber: userB.phoneNumber,
+          totalFriendCount: 2,
           mutualFriendCount: 1,
-        }),
-        expect.objectContaining({
-          id: userC.id,
+        },
+        {
           fullName: userC.fullName,
           phoneNumber: userC.phoneNumber,
           totalFriendCount: 2,
           mutualFriendCount: 1,
-        }),
+        },
+        {
+          fullName: userD.fullName,
+          phoneNumber: userD.phoneNumber,
+          totalFriendCount: 1,
+          mutualFriendCount: 0,
+        },
+        {
+          fullName: userE.fullName,
+          phoneNumber: userE.phoneNumber,
+          totalFriendCount: 1,
+          mutualFriendCount: 0,
+        },
       ])
     )
   })

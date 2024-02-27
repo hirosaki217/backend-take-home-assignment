@@ -114,6 +114,7 @@ export const myFriendRouter = router({
             .select((eb2) => [
               eb2.fn.count('f1.friendUserId').as('mutualFriendCount'),
             ])
+
           return [
             'friends.id',
             'friends.fullName',
@@ -126,7 +127,6 @@ export const myFriendRouter = router({
         .then(
           z.array(
             z.object({
-              id: IdSchema,
               fullName: NonEmptyStringSchema,
               phoneNumber: NonEmptyStringSchema,
               totalFriendCount: CountSchema,
